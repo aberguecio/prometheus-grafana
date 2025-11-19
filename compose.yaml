@@ -5,20 +5,18 @@ services:
     container_name: prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-    ports:
-      - 9090:9090
+      - '--storage.tsdb.retention.time=365d'
+      - '--storage.tsdb.retention.size=10GB'
     restart: unless-stopped
     volumes:
       - ./prometheus:/etc/prometheus
       - prom_data:/prometheus
     networks:
-      - monitoring
+      - webapp
 
   grafana:
     image: grafana/grafana
     container_name: grafana
-    ports:
-      - 3000:3000
     restart: unless-stopped
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
@@ -29,34 +27,36 @@ services:
       - ./grafana:/etc/grafana/provisioning/datasources
       - grafana_data:/var/lib/grafana
     networks:
-      - monitoring
+      - webapp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.berguecio.cl`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.docker.network=webapp"
 
   node-exporter:
     image: prom/node-exporter
     container_name: node-exporter
-    ports:
-      - 9100:9100
     restart: unless-stopped
     networks:
-      - monitoring
+      - webapp
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.38.8
     container_name: cadvisor
-    ports:
-      - 9323:8080
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /sys:/sys
       - /var/lib/docker/:/var/lib/docker
     networks:
-      - monitoring
+      - webapp
 
 volumes:
   prom_data:
   grafana_data:
 
 networks:
-  monitoring:
+  webapp:
     external: true
