@@ -24,3 +24,34 @@ scrape_configs:
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
+
+  # Blackbox Exporter self-monitoring
+  - job_name: 'blackbox'
+    static_configs:
+      - targets: ['blackbox-exporter:9115']
+
+  # Blackbox HTTP checks automáticos desde Docker labels
+  - job_name: 'blackbox-docker-auto'
+    metrics_path: /probe
+    params:
+      module: [http_2xx_ssl]
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_docker_container_label_monitoring_url]
+        regex: '.+'
+        action: keep
+      # Usar monitoring.url como target
+      - source_labels: [__meta_docker_container_label_monitoring_url]
+        target_label: __param_target
+      # Usar el nombre del contenedor como instance
+      - source_labels: [__meta_docker_container_name]
+        regex: '/(.*)'
+        target_label: instance
+      # Agregar label del servicio
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: service
+      # Redirigir al blackbox exporter
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
