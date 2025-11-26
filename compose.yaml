@@ -12,7 +12,7 @@ services:
       - ./prometheus:/etc/prometheus
       - prom_data:/prometheus
     networks:
-      - monitoring
+      - proxy
 
   grafana:
     image: grafana/grafana
@@ -27,20 +27,19 @@ services:
       - ./grafana:/etc/grafana/provisioning/datasources
       - grafana_data:/var/lib/grafana
     networks:
-      - monitoring
+      - proxy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`grafana.berguecio.cl`)"
       - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-      - "traefik.docker.network=monitoring"
 
   node-exporter:
     image: prom/node-exporter
     container_name: node-exporter
     restart: unless-stopped
     networks:
-      - monitoring
+      - proxy
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.38.8
@@ -51,12 +50,12 @@ services:
       - /sys:/sys
       - /var/lib/docker/:/var/lib/docker
     networks:
-      - monitoring
+      - proxy
 
 volumes:
   prom_data:
   grafana_data:
 
 networks:
-  monitoring:
+  proxy:
     external: true
