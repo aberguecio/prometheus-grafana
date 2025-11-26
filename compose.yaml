@@ -3,6 +3,7 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: prometheus
+    user: "65534:999"  # nobody:docker group
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=365d'
