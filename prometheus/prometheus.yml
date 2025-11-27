@@ -30,6 +30,22 @@ scrape_configs:
     static_configs:
       - targets: ['blackbox-exporter:9115']
 
+  # Blackbox check para Traefik (con autenticación)
+  - job_name: 'blackbox-traefik'
+    metrics_path: /probe
+    params:
+      module: [http_2xx_auth]
+    static_configs:
+      - targets:
+        - https://traefik.berguecio.cl  # Ajusta la URL de tu Traefik
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
   # Blackbox HTTP checks automáticos desde Docker labels
   - job_name: 'blackbox-docker-auto'
     metrics_path: /probe
