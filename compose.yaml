@@ -61,14 +61,10 @@ services:
     image: prom/blackbox-exporter:latest
     container_name: blackbox-exporter
     restart: unless-stopped
-    environment:
-      - TRAEFIK_AUTH_USER=${TRAEFIK_AUTH_USER}
-      - TRAEFIK_AUTH_PASS=${TRAEFIK_AUTH_PASS}
     volumes:
       - ./blackbox:/config
     command:
       - '--config.file=/config/blackbox.yml'
-      - '--config.expand-env=true'
     networks:
       - proxy
 
